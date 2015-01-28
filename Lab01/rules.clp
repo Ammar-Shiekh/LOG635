@@ -14,92 +14,140 @@
 ;;;*************
 
 
+; *** States ***
+; 
+; has-ebola ?person
+;
+; doesnt-have-ebola ?person
+;
+; got-ebola ?person
+;
+; was-contagious-at ?person ?time
+;
+;
+;
+
 ; *** Events ***
 ; 
 ; transmission ?transmitor ?infected ?time
 ;
 ; meeting ?person1 ?person2 ?time
-
-; started-vomitting ?person ?time
 ;
-; started-headaches ?person ?time
 ;
-; started-shitting  ?person ?time
 ;
-; got-ebola ?person
+;
 ;
 
 (clear)
+(printout t crlf)
 
 (deffacts faits
-
+	
+	(meeting jim bob 2)
 	(meeting jane bob 3)
-	(meeting bob simon 13)
-	(transmission bob simon 13)
-
+	(meeting jane ginette 5)
+	(got-ebola bob)
+	(transmission bob simon 12)
+	(meeting simon marc 13)
 )
 
+;
+; Asserts caused by transmission
+;
 (defrule transmissionSimple
+	(declare (salience 30))
+
 	(transmission ?transmitor ?infected ?t)
 	=>
+	(assert (has-ebola ?transmitor))
+	(assert (was-contagious-at ?transmitor ?t))
+
 	(assert (has-ebola ?infected))
 	(assert (got-ebola ?infected))
-	(printout t ?transmitor " a donne l'Ebola a " ?infected " a " ?t "h" crlf)
+	(assert (was-contagious-at ?infected (+ ?t 8)))
+
+	(printout t ?transmitor " a donne l'Ebola a " ?infected " a " ?t "h. (transmissionSimple)" crlf)
 )
 
+;
+; Transmission during a meeting (?p1 infects ?p2)
+;
 (defrule transmissionDroite
 	(meeting ?p1 ?p2 ?t)
-	(is-contagious ?p1)
+	(was-contagious-at ?p1 ?t2)
+	(test (>= ?t ?t2))
 	(not (has-ebola ?p2))
 	=>
 	(assert (transmission ?p1 ?p2 ?t))
+
+	(printout t "(transmissionDroite) ")
+	; go to transmissionSimple
 )
 
+;
+; Transmission during a meeting (?p2 infects ?p1)
+;
 (defrule transmissionGauche
 	(meeting ?p1 ?p2 ?t)
-	(is-contagious ?p2)
+	(was-contagious-at ?p2 ?t2)
+	(test (>= ?t ?t2))
 	(not (has-ebola ?p1))
 	=>
 	(assert (transmission ?p2 ?p1 ?t))
+
+	(printout t "(transmissionGauche) ")
+	; go to transmissionSimple
 )
 
-(defrule transmissionInverse
-	(transmission ?transmitor ?infected ?t1)
+;
+; Deduce that a transmission occured if ?infected has ebola and
+; he met with ?transmitor
+;
+(defrule transmissionDeduite
+	(or 
+		(meeting ?infected ?transmitor ?meetingTime)
+		(meeting ?transmitor ?infected ?meetingTime)
+	)
 	(has-ebola ?infected)
-	=>
-	(assert (is-contagious ?transmitor))
+	(got-ebola ?infected)
+	(not (transmission ?transmitor ?infected ?anOtherTime))
+	(not (transmission ?infected ?transmitor ?meetingTime))
+	(not (transmission ?someoneElse ?infected ?anOtherTime2))
 
-	(printout t "On peut deduire que " ?transmitor " a l'ebola"  crlf)
+	(was-contagious-at ?infected ?contagiousTime)
+	(test (>= ?contagiousTime (+ ?meetingTime 8)))
+	=>
+	(assert (transmission ?transmitor ?infected ?meetingTime))
+
+	(printout t "(transmissionDeduite) ")
+	; go to transmissionSimple
 )
 
-(defrule contagion
-	(transmission ?p1 ?p2 ?t1)
-	(meeting ?p2 ?p3 ?t2)
-	(test (>= ?t2 (+ ?t1 8))) ; CONTAGION TIME 8H !!!
+;
+; Removes was-contagious facts that are useless (after a previous)
+;
+(defrule removeFutureContagion
+	
+	(was-contagious-at ?person ?t1)
+	(was-contagious-at ?person ?t2)
+	(test (< ?t1 ?t2))
+	?toRetract <- (was-contagious-at ?person ?t2)
 	=>
-	(assert (is-contagious ?p2))
-
-	(printout t ?p2 " est devenu contagieux a " ?t2 "h" crlf)
+	(retract ?toRetract)
 )
 
-(defrule ebolaViaContagion
-	(declare (salience 5) ) ;RULE #5
-
-	(is-contagious ?p1)
-	(not (has-ebola ?p1))
-	=>
-	(assert (has-ebola ?p1))
-)
-
+;
+; Asserts who is patient zero
+;
 (defrule patientZero
-	(declare (salience 10) ) ;RULE #1 (derniere regle)
+	(declare (salience 1))
 
 	(has-ebola ?p1)
 	(not (got-ebola ?p1))
 	=>
 	(assert (is-patient-zero ?p1))
-	(printout t ?p1 " est le patient-zero!" crlf)
 
+	(printout t ?p1 " est le patient-zero! (patientZero)" crlf crlf)
 )
 
 (reset)
