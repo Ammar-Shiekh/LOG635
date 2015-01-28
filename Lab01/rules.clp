@@ -18,7 +18,7 @@
 ; 
 ; has-ebola ?person
 ;
-; doesnt-have-ebola ?person
+; not-infected-at ?person ?time
 ;
 ; got-ebola ?person
 ;
