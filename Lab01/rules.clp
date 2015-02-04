@@ -23,9 +23,13 @@
 ;
 ; was-contagious-at ?person ?time
 ;
-; has-symptom ?person ?symptom
+; has-diarrhea-at ?person ?time
 ;
+; is-vomiting-at ?person ?time
 ;
+; has-headache-at ?person ?time
+;
+; is-bleeding-at ?person ?time
 ;
 
 ; *** Events ***
@@ -34,9 +38,14 @@
 ;
 ; meeting ?person1 ?person2 ?time
 ;
+
+; *** People *** 
 ;
+; homer  lisa    lenny
 ;
+; marge  maggie  carl
 ;
+; bart   moe     ralph
 ;
 
 (clear)
@@ -44,15 +53,30 @@
 
 (deffacts faits
 	
-	(meeting jim bob 2)
-	(meeting jane bob 3)
-	(meeting jane ginette 5)
-	(got-ebola bob)
-	(transmission bob simon 12)
-	(meeting simon marc 13)
-	(has-symptom lololol headache)
-	(has-symptom lololol vomiting)
-	(has-symptom lololol diarrhea)
+	(is-at home marge 5)
+	(is-at home homer 5)
+
+	(is-at central lenny 9)
+	(is-at central homer 9)
+	(is-at central carl 9)
+
+	(meeting lisa bart 4)
+	(meeting marge lisa 10)
+	(meeting lenny carl 8)
+	(meeting homer carl 10)
+	(meeting marge ralph 14)
+	(meeting maggie bart 12)
+	(meeting bart marge 15)
+	(meeting carl moe 14)
+	(meeting homer ralph 20)
+	(meeting lisa lenny 18)
+	(meeting ralph moe 24)
+
+	(got-ebola moe)
+	(not-infected-at lisa 5)
+	(not-infected-at moe 15)
+	(got-ebola marge)
+
 )
 
 ;
@@ -84,7 +108,7 @@
 	=>
 	(assert (transmission ?p1 ?p2 ?t))
 
-	(printout t "(transmissionDroite) " crlf)
+	(printout t "(transmissionDroite) ")
 	; go to transmissionSimple
 )
 
@@ -99,7 +123,7 @@
 	=>
 	(assert (transmission ?p2 ?p1 ?t))
 
-	(printout t "(transmissionGauche) " crlf)
+	(printout t "(transmissionGauche) ")
 	; go to transmissionSimple
 )
 
@@ -112,6 +136,7 @@
 		(meeting ?infected ?transmitor ?meetingTime)
 		(meeting ?transmitor ?infected ?meetingTime)
 	)
+
 	(has-ebola ?infected)
 	(got-ebola ?infected)
 	(not (transmission ?transmitor ?infected ?anOtherTime))
@@ -120,10 +145,93 @@
 
 	(was-contagious-at ?infected ?contagiousTime)
 	(test (>= ?contagiousTime (+ ?meetingTime 8)))
+
+	(not
+		(and
+			(not-infected-at ?transmitor ?nonInfectionTime2)
+			(test (>= ?nonInfectionTime2 ?meetingTime))
+		)
+	)
+
+	; If there was a meeting between ?transmitor and another person after
+	; the current meeting and the other person is not infected after that,
+	; than the ?transmitor could not be contagious now.
+	(not 
+		(and
+			(or
+				(meeting ?transmitor ?anotherPerson ?otherMeetingTime)
+				(meeting ?anotherPerson ?transmitor ?otherMeetingTime)
+			)
+			(not-infected-at ?anotherPerson ?nonInfectionTime)
+			(test (>= ?nonInfectionTime ?otherMeetingTime))
+			(test (>= ?otherMeetingTime ?meetingTime))
+		)
+	)
+
 	=>
 	(assert (transmission ?transmitor ?infected ?meetingTime))
 
-	(printout t "(transmissionDeduite) " crlf)
+	(printout t "(transmissionDeduite) ")
+	; go to transmissionSimple
+)
+
+;
+; Deduces that ?transmitor gave ebola to ?infected if ?infected
+; got ebola and he only had 1 meeting
+;
+(defrule transmissionViaGotEbola
+
+	(got-ebola ?infected)
+	(or
+		(meeting ?infected ?transmitor ?sometime)
+		(meeting ?transmitor ?infected ?sometime)
+	)
+	
+	(or 
+		(and
+			(not-infected-at ?infected ?t1)
+			(test (< ?t1 ?sometime))
+		)
+		(not 
+			(not-infected-at ?infected ?t2)
+		)
+	)
+
+	(not
+		(and
+			(or
+				(meeting ?infected ?someoneElse ?othertime)
+				(meeting ?someoneElse ?infected ?othertime)
+			)
+			(not (test (= ?sometime ?othertime)))
+			(not (test (= ?transmitor ?someoneElse)))
+			
+			(or 
+				(and
+					(not-infected-at ?infected ?t3)
+					(test (< ?t3 ?othertime))
+				)
+				(not 
+					(not-infected-at ?infected ?t4)
+				)
+			)
+
+			(or 
+				(and
+					(not-infected-at ?someoneElse ?t5)
+					(test (< ?t5 ?othertime))
+				)
+				(not 
+					(not-infected-at ?someoneElse ?t6)
+				)
+			)
+		)
+	)
+
+	=>
+	(assert (transmission ?transmitor ?infected ?sometime))
+
+	(printout t "(transmissionViaGotEbola) ")
 	; go to transmissionSimple
 )
 
@@ -135,9 +243,56 @@
 	(was-contagious-at ?person ?t1)
 	(was-contagious-at ?person ?t2)
 	(test (< ?t1 ?t2))
-	?toRetract <- (was-contagious-at ?person ?t2 crlf)
+	?toRetract <- (was-contagious-at ?person ?t2)
 	=>
 	(retract ?toRetract)
+)
+
+;
+; Removes not-infected-at facts that are useless (before one that is later)
+;
+(defrule removePreviousNonInfections
+	
+	(not-infected-at ?person ?t1)
+	(not-infected-at ?person ?t2)
+	(test (> ?t1 ?t2))
+	?toRetract <- (not-infected-at ?person ?t2)
+	=>
+	(retract ?toRetract)
+)
+
+(defrule meetingViaLocation
+
+	(is-at ?lieu ?person1 ?t1)
+	(is-at ?lieu ?person2 ?t1)
+	(not (test (= ?person1 ?person2)))
+	(not 
+		(or
+			(meeting ?person1 ?person2 ?t1)
+			(meeting ?person2 ?person1 ?t1)
+		)
+	)
+	=>
+	(assert (meeting ?person1 ?person2 ?t1))
+
+	(printout t  "Meeting entre " ?person1 " et " ?person2 " a " ?t1 "h. (meetingViaLocation)" crlf)
+)
+
+;
+; Deducing with symptom if ?p have ebola
+;
+(defrule ebolaFromSymptoms
+
+	(has-headache-at ?p ?t1)
+	(has-diarrhea-at ?p ?t2)
+	(is-vomiting-at ?p ?t3)
+
+	(test (= ?t1 (+ ?t2 2)))
+	(test (= ?t2 (+ ?t3 2)))
+
+	=>
+	(assert (was-contagious-at ?p (- ?t1 2)))
+	(assert (has-ebola ?p))
 )
 
 ;
@@ -154,61 +309,7 @@
 	(printout t ?p1 " est le patient-zero! (patientZero)" crlf)
 )
 
-;
-; Define symptom for headache
-;
-(defrule symptomHeadache
-	(declare (salience 27))
-	(was-contagious-at ?p ?t)
-	(not (has-symptom ?p headache))
-	(test (>= ?t 2))
-	=>
-	(assert (has-symptom ?p headache))
-
-	(printout t ?p " a headache a "(+ ?t 2) crlf)
-)
-
-;
-; Define symptom for diarrhea
-;
-(defrule symptomdiarrhea
-	(declare (salience 26))
-	(was-contagious-at ?p ?t)
-	(not (has-symptom ?p diarrhea))
-	(test (>= ?t 4))
-	=>
-	(assert (has-symptom ?p diarrhea))
-
-	(printout t ?p " a diarrhea a "(+ ?t 4) crlf)
-)
-
-;
-; Define symptom for vomiting
-;
-(defrule symptomvomiting
-	(declare (salience 25))
-	(was-contagious-at ?p ?t)
-	(not (has-symptom ?p vomiting))
-	(test (>= ?t 6))
-	=>
-	(assert (has-symptom ?p vomiting))
-
-	(printout t ?p " a vomiting a "(+ ?t 6) crlf)
-)
-
-;
-; Deducing with symptom if ?p have ebola
-;
-(defrule ebolaFromSymptom
-	(has-symptom ?p headache)
-	(has-symptom ?p diarrhea)
-	(has-symptom ?p vomiting)
-	(not (has-ebola ?p))
-	=>
-	(assert (has-ebola ?p))
-
-	(printout t ?p " a l'ebola " crlf)
-)
-
 (reset)
 (run)
+(printout t crlf)
+(facts)
