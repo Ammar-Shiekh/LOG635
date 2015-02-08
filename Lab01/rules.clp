@@ -51,32 +51,84 @@
 (clear)
 (printout t crlf)
 
-(deffacts faits
+(deffacts locations
 	
+	(is-at home marge 4)
+	(is-at home maggie 4)
+
 	(is-at home marge 5)
 	(is-at home homer 5)
+	(is-at home lisa 5)
+	(is-at home bart 5)
 
 	(is-at central lenny 9)
 	(is-at central homer 9)
 	(is-at central carl 9)
 
-	(meeting lisa bart 4)
-	(meeting marge lisa 10)
-	(meeting lenny carl 8)
-	(meeting homer carl 10)
-	(meeting marge ralph 14)
-	(meeting maggie bart 12)
-	(meeting bart marge 15)
-	(meeting carl moe 14)
-	(meeting homer ralph 20)
-	(meeting lisa lenny 18)
-	(meeting ralph moe 24)
+	(is-at school bart 9)
+	(is-at school ralph 9)
 
-	(got-ebola moe)
-	(not-infected-at lisa 5)
-	(not-infected-at moe 15)
-	(got-ebola marge)
+	(is-at school lisa 11)
+	(is-at school ralph 11)
 
+	(is-at home marge 14)
+	(is-at home maggie 14)
+	(is-at home moe 14)
+
+	(is-at central lenny 15)
+	(is-at central carl 15)
+
+	(is-at central homer 16)
+	(is-at central lenny 16)
+
+	(is-at bar moe 18)
+	(is-at bar homer 18)
+	(is-at bar lenny 18)
+
+	(is-at bar moe 19)
+	(is-at bar carl 19)
+	(is-at bar homer 19)
+
+	(is-at bar moe 20)
+	(is-at bar carl 20)
+	(is-at bar lenny 20)
+
+	(is-at home homer 22)
+	(is-at home ralph 22)
+	(is-at home lisa 22)
+	(is-at home marge 22)
+	(is-at home maggie 22)
+	(is-at home bart 22)
+
+	(is-at home lisa 50)
+	(is-at home marge 50)
+	(is-at home maggie 50)
+
+	(is-at bar moe 52)
+	(is-at bar homer 52)
+
+	(is-at school marge 56)
+	(is-at school bart 56)
+	(is-at school lisa 56)
+
+	(is-at school lisa 60)
+	(is-at school ralph 60)
+
+	(is-at central 64 homer)
+	(is-at central 64 lenny)
+
+	(is-at bar moe 70)
+	(is-at bar lenny 70)
+	(is-at bar carl 70)
+
+)
+
+(deffacts states
+
+	(has-headache-at carl 80)
+	(has-diarrhea-at carl 82)
+	(is-vomiting-at carl 84)
+	(got-ebola carl)
 )
 
 ;
@@ -149,7 +201,7 @@
 	(not
 		(and
 			(not-infected-at ?transmitor ?nonInfectionTime2)
-			(test (>= ?nonInfectionTime2 ?meetingTime))
+			(test (> (+ ?nonInfectionTime2 8) ?meetingTime))
 		)
 	)
 
@@ -177,17 +229,17 @@
 
 ;
 ; Deduces that ?transmitor gave ebola to ?infected if ?infected
-; got ebola and he only had 1 meeting
+; got ebola and he only had 1 meeting... to specify...
 ;
 (defrule transmissionViaGotEbola
 
-	(got-ebola ?infected)
-	(or
+	(got-ebola ?infected)											; If got-ebola ?infected
+	(or 															; and ?infected had a meeting with transmitor
 		(meeting ?infected ?transmitor ?sometime)
 		(meeting ?transmitor ?infected ?sometime)
 	)
 	
-	(or 
+	(or 															; and ?infected was not not-infected after the meeting
 		(and
 			(not-infected-at ?infected ?t1)
 			(test (< ?t1 ?sometime))
@@ -197,16 +249,26 @@
 		)
 	)
 
-	(not
+	(or 
+		(and
+			(not-infected-at ?transmitor ?t1)
+			(test (< ?t1 ?sometime))
+		)
+		(not 
+			(not-infected-at ?transmitor ?t2)
+		)
+	)
+
+	(not 															; and ?infected didn't meet with someone else
 		(and
 			(or
 				(meeting ?infected ?someoneElse ?othertime)
 				(meeting ?someoneElse ?infected ?othertime)
 			)
-			(not (test (= ?sometime ?othertime)))
-			(not (test (= ?transmitor ?someoneElse)))
+			(test (= ?sometime ?othertime))
+			(test (= ?transmitor ?someoneElse))
 			
-			(or 
+			(or 													; or the meeting with someone else was after ?infected was declared not-infected
 				(and
 					(not-infected-at ?infected ?t3)
 					(test (< ?t3 ?othertime))
@@ -216,7 +278,7 @@
 				)
 			)
 
-			(or 
+			(or 													; or someone else was declared not-infected after the meeting
 				(and
 					(not-infected-at ?someoneElse ?t5)
 					(test (< ?t5 ?othertime))
@@ -275,7 +337,7 @@
 	=>
 	(assert (meeting ?person1 ?person2 ?t1))
 
-	(printout t  "Meeting entre " ?person1 " et " ?person2 " a " ?t1 "h. (meetingViaLocation)" crlf)
+	;(printout t  "Meeting entre " ?person1 " et " ?person2 " a " ?t1 "h. (meetingViaLocation)" crlf)
 )
 
 ;
@@ -287,8 +349,8 @@
 	(has-diarrhea-at ?p ?t2)
 	(is-vomiting-at ?p ?t3)
 
-	(test (= ?t1 (+ ?t2 2)))
-	(test (= ?t2 (+ ?t3 2)))
+	(test (= ?t2 (+ ?t1 2)))
+	(test (= ?t3 (+ ?t2 2)))
 
 	=>
 	(assert (was-contagious-at ?p (- ?t1 2)))
@@ -296,20 +358,40 @@
 )
 
 ;
+; TODO
+;
+(defrule gotEbolaFromNotInfected
+	
+	(not-infected-at ?person ?t1)
+	(was-contagious-at ?person ?t2)
+
+	=>
+	(assert (got-ebola ?person))
+)
+
+
+(reset)
+(run)
+(printout t crlf)
+
+;
 ; Asserts who is patient zero
 ;
+
 (defrule patientZero
 	(declare (salience 1))
 
 	(has-ebola ?p1)
 	(not (got-ebola ?p1))
+
 	=>
 	(assert (is-patient-zero ?p1))
 
-	(printout t ?p1 " est le patient-zero! (patientZero)" crlf)
+	(printout t "LE PATIENT ZERO EST " ?p1 "! ARRETEZ LE !!!" crlf)
 )
 
-(reset)
 (run)
+
 (printout t crlf)
+
 (facts)
