@@ -23,6 +23,8 @@
 ;
 ; was-contagious-at ?person ?time
 ;
+; started-being-contagious-at ?person ?time
+;
 ; has-diarrhea-at ?person ?time
 ;
 ; is-vomiting-at ?person ?time
@@ -30,6 +32,8 @@
 ; has-headache-at ?person ?time
 ;
 ; is-bleeding-at ?person ?time
+;
+; is-dead-at ?person ?time
 ;
 
 ; *** Events ***
@@ -53,82 +57,20 @@
 
 (deffacts locations
 	
-	(is-at home marge 4)
-	(is-at home maggie 4)
-
-	(is-at home marge 5)
-	(is-at home homer 5)
-	(is-at home lisa 5)
-	(is-at home bart 5)
-
-	(is-at central lenny 9)
-	(is-at central homer 9)
-	(is-at central carl 9)
-
-	(is-at school bart 9)
-	(is-at school ralph 9)
-
-	(is-at school lisa 11)
-	(is-at school ralph 11)
-
-	(is-at home marge 14)
-	(is-at home maggie 14)
-	(is-at home moe 14)
-
-	(is-at central lenny 15)
-	(is-at central carl 15)
-
-	(is-at central homer 16)
-	(is-at central lenny 16)
-
-	(is-at bar moe 18)
-	(is-at bar homer 18)
-	(is-at bar lenny 18)
-
-	(is-at bar moe 19)
-	(is-at bar carl 19)
-	(is-at bar homer 19)
-
-	(is-at bar moe 20)
-	(is-at bar carl 20)
-	(is-at bar lenny 20)
-
-	(is-at home homer 22)
-	(is-at home ralph 22)
-	(is-at home lisa 22)
-	(is-at home marge 22)
-	(is-at home maggie 22)
-	(is-at home bart 22)
-
-	(is-at home lisa 50)
-	(is-at home marge 50)
-	(is-at home maggie 50)
-
-	(is-at bar moe 52)
-	(is-at bar homer 52)
-
-	(is-at school marge 56)
-	(is-at school bart 56)
-	(is-at school lisa 56)
-
-	(is-at school lisa 60)
-	(is-at school ralph 60)
-
-	(is-at central 64 homer)
-	(is-at central 64 lenny)
-
-	(is-at bar moe 70)
-	(is-at bar lenny 70)
-	(is-at bar carl 70)
+	(meeting marge homer 2)
+	(meeting bart homer 2)
+	(meeting maggie homer 1)
 
 )
 
 (deffacts states
 
-	(has-headache-at carl 80)
-	(has-diarrhea-at carl 82)
-	(is-vomiting-at carl 84)
-	(got-ebola carl)
+	(not-infected-at bart 3)
+	(not-infected-at maggie 3)
+
+	(has-headache-at homer 12)
+	(is-dead-at homer 14)
+	(got-ebola homer)
 )
 
 ;
@@ -214,11 +156,33 @@
 				(meeting ?transmitor ?anotherPerson ?otherMeetingTime)
 				(meeting ?anotherPerson ?transmitor ?otherMeetingTime)
 			)
+
+			(test (>= ?otherMeetingTime ?meetingTime))			
 			(not-infected-at ?anotherPerson ?nonInfectionTime)
 			(test (>= ?nonInfectionTime ?otherMeetingTime))
-			(test (>= ?otherMeetingTime ?meetingTime))
 		)
 	)
+
+	(not 															; and ?infected didn't meet with someone else
+		(and
+			(or
+				(meeting ?infected ?someoneElse ?otherMeetingTime)
+				(meeting ?someoneElse ?infected ?otherMeetingTime)
+			)
+			(not (test (= ?transmitor ?someoneElse)))
+
+			(or 													; or someone else was declared not-infected after the meeting
+				(and
+					(not-infected-at ?someoneElse ?t5)
+					(test (< ?t5 ?otherMeetingTime))
+				)
+				(not 
+					(not-infected-at ?someoneElse ?t6)
+				)
+			)
+		)
+	)
+
 
 	=>
 	(assert (transmission ?transmitor ?infected ?meetingTime))
@@ -336,14 +300,12 @@
 	)
 	=>
 	(assert (meeting ?person1 ?person2 ?t1))
-
-	;(printout t  "Meeting entre " ?person1 " et " ?person2 " a " ?t1 "h. (meetingViaLocation)" crlf)
 )
 
 ;
 ; Deducing with symptom if ?p have ebola
 ;
-(defrule ebolaFromSymptoms
+(defrule contagionFromMinorSymptoms
 
 	(has-headache-at ?p ?t1)
 	(has-diarrhea-at ?p ?t2)
@@ -353,8 +315,105 @@
 	(test (= ?t3 (+ ?t2 2)))
 
 	=>
+	(assert (started-being-contagious-at ?p (- ?t1 2)))
 	(assert (was-contagious-at ?p (- ?t1 2)))
 	(assert (has-ebola ?p))
+)
+
+(defrule contagionFromHeadacheAndMajorSymptom
+
+	(or
+		(is-dead-at ?person ?t1)
+		(is-bleeding-at ?person ?t2)
+	)
+	(has-headache-at ?person ?t3)
+	
+	=>
+
+	(assert (started-being-contagious-at ?person (- ?t3 2)))
+	(assert (was-contagious-at ?person (- ?t3 2)))
+	(assert (has-ebola ?person))
+)
+
+(defrule contagionFromDiarrheaAndMajorSymptom
+
+	(or
+		(is-dead-at ?person ?t1)
+		(is-bleeding-at ?person ?t2)
+	)
+	(has-diarrhea-at ?person ?t3)
+	
+	=>
+	(assert (started-being-contagious-at ?person (- ?t3 4)))
+	(assert (was-contagious-at ?person (- ?t3 4)))
+	(assert (has-ebola ?person))
+)
+
+(defrule contagionFromVomitingAndMajorSymptom
+
+	(or
+		(is-dead-at ?person ?t1)
+		(is-bleeding-at ?person ?t2)
+	)
+	(is-vomiting-at ?person ?t3)
+	
+	=>
+	(assert (started-being-contagious-at ?person (- ?t3 6)))
+	(assert (was-contagious-at ?person (- ?t3 6)))
+	(assert (has-ebola ?person))
+)
+
+;
+; If we know when someone became contagious, than remove all future (was-contagious-at ...)
+;
+(defrule retractFutureWasContagious
+
+	(started-being-contagious-at ?p ?contagionTime)
+	(was-contagious-at ?p ?otherTime)
+	(test (> ?otherTime ?contagionTime))
+
+	?toRetract <- (was-contagious-at ?p ?otherTime)
+
+	=>
+
+	(retract (?toRetract))
+)
+
+(defrule transmissionViaStartedBeingContagious
+
+	(started-being-contagious-at ?infected ?contagiousTime)
+	(or
+		(meeting ?infected ?transmitor ?transmissionTime)
+		(meeting ?transmitor ?infected ?transmissionTime)
+	)
+	(test (= ?contagiousTime (+ ?transmissionTime 8)))
+
+	(not 
+		(and
+			(or
+				(meeting ?infected ?someoneElse ?transmissionTime)
+				(meeting ?someoneElse ?infected ?transmissionTime)
+			)
+			(not (test (= ?someoneElse ?transmitor)))
+
+			(or
+				(and
+					(not-infected-at ?someoneElse ?t5)
+					(test (< ?t5 ?transmissionTime))
+				)
+				(not 
+					(not-infected-at ?someoneElse ?t6)
+				)
+			)
+		)
+	)
+
+	(not (transmission ?transmitor ?infected ?transmissionTime))
+
+	=>
+	(assert (transmission ?transmitor ?infected ?transmissionTime))
+
+	(printout t "(transmissionViaStartedBeingContagious) ")
 )
 
 ;
