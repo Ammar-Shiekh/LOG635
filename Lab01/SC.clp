@@ -65,6 +65,7 @@
 
 	(has-diarrhea-at marge 38)
 	(is-dead-at marge 42)
+	(transmission lisa ralph 20)
 )
 
 (batch "..\\..\\..\\Lab01\\rules.clp")
