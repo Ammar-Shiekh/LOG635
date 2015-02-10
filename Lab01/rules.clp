@@ -52,26 +52,7 @@
 ; bart   moe     ralph
 ;
 
-(clear)
 (printout t crlf)
-
-(deffacts locations
-	
-	(meeting marge homer 2)
-	(meeting bart homer 2)
-	(meeting maggie homer 1)
-
-)
-
-(deffacts states
-
-	(not-infected-at bart 3)
-	(not-infected-at maggie 3)
-
-	(has-headache-at homer 12)
-	(is-dead-at homer 14)
-	(got-ebola homer)
-)
 
 ;
 ; Asserts caused by transmission
