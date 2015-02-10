@@ -23,8 +23,6 @@
 ;
 ; was-contagious-at ?person ?time
 ;
-; started-being-contagious-at ?person ?time
-;
 ; has-diarrhea-at ?person ?time
 ;
 ; is-vomiting-at ?person ?time
@@ -32,8 +30,6 @@
 ; has-headache-at ?person ?time
 ;
 ; is-bleeding-at ?person ?time
-;
-; is-dead-at ?person ?time
 ;
 
 ; *** Events ***
@@ -52,25 +48,65 @@
 ; bart   moe     ralph
 ;
 
-(clear)
-(printout t crlf)
 
-(deffacts locations
+;(printout t crlf)
+
+;(deffacts faits
+;	
+;	(is-at home marge 5)
+;	(is-at home homer 5)
+;
+;	(is-at central lenny 9)
+;	(is-at central homer 9)
+;	(is-at central carl 9)
+;
+;	(meeting lisa bart 4)
+;	(meeting marge lisa 10)
+;	(meeting lenny carl 8)
+;	(meeting homer carl 10)
+;	(meeting marge ralph 14)
+;	(meeting maggie bart 12)
+;	(meeting bart marge 15)
+;	(meeting carl moe 14)
+;	(meeting homer ralph 20)
+;	(meeting lisa lenny 18)
+;	(meeting ralph moe 24)
+;
+;	(got-ebola moe)
+;	(not-infected-at lisa 5)
+;	(not-infected-at moe 15)
+;	(got-ebola marge)
+;
+;)
+
+;
+; Asserts has-ebola if got-ebola
+;
+(defrule haveEbolaIfGotIt
+	(declare (salience 5))
+	(got-ebola ?infected)
+	(not (has-ebola ?infected))
+	=>
+	(assert (has-ebola ?infected))
 	
-	(meeting marge homer 2)
-	(meeting bart homer 2)
-	(meeting maggie homer 1)
-
+	(printout t ?infected " has Ebola. (HaveEbolaIfGotIt)" crlf)
 )
 
-(deffacts states
-
-	(not-infected-at bart 3)
-	(not-infected-at maggie 3)
-
-	(has-headache-at homer 12)
-	(is-dead-at homer 14)
-	(got-ebola homer)
+;
+; Deduce got-ebola if the infected met someone 8 hours before
+;
+(defrule deduceGotEbola
+	(declare (salience 40))
+	(was-contagious-at ?infected ?t1)
+	(meeting ?infected ?p2 ?t2)
+	(not(got-ebola ?p2))
+	(not(has-ebola ?p2))
+	(not(got-ebola ?infected))
+	(test (<= ?t2 (- ?t1 8)))
+	=>
+	(assert (got-ebola ?infected))
+	
+	(printout t ?infected " got Ebola. (deduceGotEbola)" crlf)
 )
 
 ;
@@ -88,13 +124,14 @@
 	(assert (got-ebola ?infected))
 	(assert (was-contagious-at ?infected (+ ?t 8)))
 
-	(printout t ?transmitor " a donne l'Ebola a " ?infected " a " ?t "h. (transmissionSimple)" crlf)
+	(printout t ?transmitor " a donnee l'Ebola a " ?infected " a " ?t "h. (transmissionSimple)" crlf)
 )
 
 ;
 ; Transmission during a meeting (?p1 infects ?p2)
 ;
 (defrule transmissionDroite
+	(declare (salience 25))
 	(meeting ?p1 ?p2 ?t)
 	(was-contagious-at ?p1 ?t2)
 	(test (>= ?t ?t2))
@@ -110,6 +147,7 @@
 ; Transmission during a meeting (?p2 infects ?p1)
 ;
 (defrule transmissionGauche
+	(declare (salience 4))
 	(meeting ?p1 ?p2 ?t)
 	(was-contagious-at ?p2 ?t2)
 	(test (>= ?t ?t2))
@@ -126,6 +164,7 @@
 ; he met with ?transmitor
 ;
 (defrule transmissionDeduite
+	(declare (salience 15))
 	(or 
 		(meeting ?infected ?transmitor ?meetingTime)
 		(meeting ?transmitor ?infected ?meetingTime)
@@ -138,12 +177,12 @@
 	(not (transmission ?someoneElse ?infected ?anOtherTime2))
 
 	(was-contagious-at ?infected ?contagiousTime)
-	(test (>= ?contagiousTime (+ ?meetingTime 8)))
+	(test (<= ?contagiousTime (+ ?meetingTime 8)))
 
 	(not
 		(and
 			(not-infected-at ?transmitor ?nonInfectionTime2)
-			(test (> (+ ?nonInfectionTime2 8) ?meetingTime))
+			(test (>= ?nonInfectionTime2 ?meetingTime))
 		)
 	)
 
@@ -156,33 +195,11 @@
 				(meeting ?transmitor ?anotherPerson ?otherMeetingTime)
 				(meeting ?anotherPerson ?transmitor ?otherMeetingTime)
 			)
-
-			(test (>= ?otherMeetingTime ?meetingTime))			
 			(not-infected-at ?anotherPerson ?nonInfectionTime)
 			(test (>= ?nonInfectionTime ?otherMeetingTime))
+			(test (>= ?otherMeetingTime ?meetingTime))
 		)
 	)
-
-	(not 															; and ?infected didn't meet with someone else
-		(and
-			(or
-				(meeting ?infected ?someoneElse ?otherMeetingTime)
-				(meeting ?someoneElse ?infected ?otherMeetingTime)
-			)
-			(not (test (= ?transmitor ?someoneElse)))
-
-			(or 													; or someone else was declared not-infected after the meeting
-				(and
-					(not-infected-at ?someoneElse ?t5)
-					(test (< ?t5 ?otherMeetingTime))
-				)
-				(not 
-					(not-infected-at ?someoneElse ?t6)
-				)
-			)
-		)
-	)
-
 
 	=>
 	(assert (transmission ?transmitor ?infected ?meetingTime))
@@ -193,17 +210,17 @@
 
 ;
 ; Deduces that ?transmitor gave ebola to ?infected if ?infected
-; got ebola and he only had 1 meeting... to specify...
+; got ebola and he only had 1 meeting
 ;
 (defrule transmissionViaGotEbola
-
-	(got-ebola ?infected)											; If got-ebola ?infected
-	(or 															; and ?infected had a meeting with transmitor
+	(declare (salience 10))
+	(got-ebola ?infected)
+	(or
 		(meeting ?infected ?transmitor ?sometime)
 		(meeting ?transmitor ?infected ?sometime)
 	)
 	
-	(or 															; and ?infected was not not-infected after the meeting
+	(or 
 		(and
 			(not-infected-at ?infected ?t1)
 			(test (< ?t1 ?sometime))
@@ -213,26 +230,16 @@
 		)
 	)
 
-	(or 
-		(and
-			(not-infected-at ?transmitor ?t1)
-			(test (< ?t1 ?sometime))
-		)
-		(not 
-			(not-infected-at ?transmitor ?t2)
-		)
-	)
-
-	(not 															; and ?infected didn't meet with someone else
+	(not
 		(and
 			(or
 				(meeting ?infected ?someoneElse ?othertime)
 				(meeting ?someoneElse ?infected ?othertime)
 			)
-			(test (= ?sometime ?othertime))
-			(test (= ?transmitor ?someoneElse))
+			(not (test (= ?sometime ?othertime)))
+			(not (test (= ?transmitor ?someoneElse)))
 			
-			(or 													; or the meeting with someone else was after ?infected was declared not-infected
+			(or 
 				(and
 					(not-infected-at ?infected ?t3)
 					(test (< ?t3 ?othertime))
@@ -242,7 +249,7 @@
 				)
 			)
 
-			(or 													; or someone else was declared not-infected after the meeting
+			(or 
 				(and
 					(not-infected-at ?someoneElse ?t5)
 					(test (< ?t5 ?othertime))
@@ -288,7 +295,7 @@
 )
 
 (defrule meetingViaLocation
-
+	(declare (salience 35))
 	(is-at ?lieu ?person1 ?t1)
 	(is-at ?lieu ?person2 ?t1)
 	(not (test (= ?person1 ?person2)))
@@ -300,157 +307,82 @@
 	)
 	=>
 	(assert (meeting ?person1 ?person2 ?t1))
+
+	(printout t  "Meeting entre " ?person1 " et " ?person2 " a " ?t1 "h. (meetingViaLocation)" crlf)
 )
 
 ;
 ; Deducing with symptom if ?p have ebola
 ;
-(defrule contagionFromMinorSymptoms
-
+(defrule ebolaFromSymptoms
+	(declare (salience 40))
 	(has-headache-at ?p ?t1)
 	(has-diarrhea-at ?p ?t2)
 	(is-vomiting-at ?p ?t3)
 
-	(test (= ?t2 (+ ?t1 2)))
-	(test (= ?t3 (+ ?t2 2)))
+	(test (= ?t1 (+ ?t2 2)))
+	(test (= ?t2 (+ ?t3 2)))
 
 	=>
-	(assert (started-being-contagious-at ?p (- ?t1 2)))
 	(assert (was-contagious-at ?p (- ?t1 2)))
 	(assert (has-ebola ?p))
 )
 
-(defrule contagionFromHeadacheAndMajorSymptom
-
-	(or
-		(is-dead-at ?person ?t1)
-		(is-bleeding-at ?person ?t2)
-	)
-	(has-headache-at ?person ?t3)
-	
+;
+; Deducing contagious time with symptom has-headache-at if ?p have ebola
+;
+(defrule ebolaFromSymptomsHeadache
+	(declare (salience 39))
+	(has-ebola ?p)
+	(has-headache-at ?p ?t1)
 	=>
-
-	(assert (started-being-contagious-at ?person (- ?t3 2)))
-	(assert (was-contagious-at ?person (- ?t3 2)))
-	(assert (has-ebola ?person))
-)
-
-(defrule contagionFromDiarrheaAndMajorSymptom
-
-	(or
-		(is-dead-at ?person ?t1)
-		(is-bleeding-at ?person ?t2)
-	)
-	(has-diarrhea-at ?person ?t3)
-	
-	=>
-	(assert (started-being-contagious-at ?person (- ?t3 4)))
-	(assert (was-contagious-at ?person (- ?t3 4)))
-	(assert (has-ebola ?person))
-)
-
-(defrule contagionFromVomitingAndMajorSymptom
-
-	(or
-		(is-dead-at ?person ?t1)
-		(is-bleeding-at ?person ?t2)
-	)
-	(is-vomiting-at ?person ?t3)
-	
-	=>
-	(assert (started-being-contagious-at ?person (- ?t3 6)))
-	(assert (was-contagious-at ?person (- ?t3 6)))
-	(assert (has-ebola ?person))
+	(assert (was-contagious-at ?p (- ?t1 2)))
 )
 
 ;
-; If we know when someone became contagious, than remove all future (was-contagious-at ...)
+; Deducing contagious time with symptom has-diarrhea-at if ?p have ebola
 ;
-(defrule retractFutureWasContagious
-
-	(started-being-contagious-at ?p ?contagionTime)
-	(was-contagious-at ?p ?otherTime)
-	(test (> ?otherTime ?contagionTime))
-
-	?toRetract <- (was-contagious-at ?p ?otherTime)
-
+(defrule ebolaFromSymptomsDiarrhea
+	(declare (salience 39))
+	(has-ebola ?p)
+	(has-diarrhea-at ?p ?t1)
 	=>
-
-	(retract (?toRetract))
-)
-
-(defrule transmissionViaStartedBeingContagious
-
-	(started-being-contagious-at ?infected ?contagiousTime)
-	(or
-		(meeting ?infected ?transmitor ?transmissionTime)
-		(meeting ?transmitor ?infected ?transmissionTime)
-	)
-	(test (= ?contagiousTime (+ ?transmissionTime 8)))
-
-	(not 
-		(and
-			(or
-				(meeting ?infected ?someoneElse ?transmissionTime)
-				(meeting ?someoneElse ?infected ?transmissionTime)
-			)
-			(not (test (= ?someoneElse ?transmitor)))
-
-			(or
-				(and
-					(not-infected-at ?someoneElse ?t5)
-					(test (< ?t5 ?transmissionTime))
-				)
-				(not 
-					(not-infected-at ?someoneElse ?t6)
-				)
-			)
-		)
-	)
-
-	(not (transmission ?transmitor ?infected ?transmissionTime))
-
-	=>
-	(assert (transmission ?transmitor ?infected ?transmissionTime))
-
-	(printout t "(transmissionViaStartedBeingContagious) ")
+	(assert (was-contagious-at ?p (- ?t1 4)))
 )
 
 ;
-; TODO
+; Deducing contagious time with symptom has-vomiting-at if ?p have ebola
 ;
-(defrule gotEbolaFromNotInfected
+(defrule ebolaFromSymptomsVomiting
+	(declare (salience 39))
+	(has-ebola ?p)
+	(has-vomiting-at ?p ?t1)
+	=>
+	(assert (was-vomiting-at ?p (- ?t1 6)))
+)
+;
+; Asserts who is patient zero
+;
+(defrule patientZero
+
+	(has-ebola ?p1)
+	(was-contagious-at ?p1 ?t1)
+	(meeting ?p1 ?p2 ?t2)
 	
-	(not-infected-at ?person ?t1)
-	(was-contagious-at ?person ?t2)
-
+	(was-contagious-at ?p3 ?t3 )
+	(not (is-patient-zero ?p1))
+	(not(got-ebola ?p1))
+	;is not patient-zero if meeting some one before being contagious
+	(test (<= ?t1 ?t2 ))
+	(not (test (< ?t3 ?t1)))
 	=>
-	(assert (got-ebola ?person))
-)
+	(assert (is-patient-zero ?p1))
 
+	(printout t ?p1 " et " ?p2 crlf)
+	(printout t ?p1 " est le patient-zero! (patientZero)" crlf)
+)
 
 (reset)
 (run)
 (printout t crlf)
-
-;
-; Asserts who is patient zero
-;
-
-(defrule patientZero
-	(declare (salience 1))
-
-	(has-ebola ?p1)
-	(not (got-ebola ?p1))
-
-	=>
-	(assert (is-patient-zero ?p1))
-
-	(printout t "LE PATIENT ZERO EST " ?p1 "! ARRETEZ LE !!!" crlf)
-)
-
-(run)
-
-(printout t crlf)
-
 (facts)
