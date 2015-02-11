@@ -68,6 +68,7 @@
 (was-contagious-at homer 28)
 (got-ebola lenny)
 (got-ebola bart)
+(has-ebola lenny)
 (was-contagious-at lenny 20)
 (not-infected-at bart 3)
 )
