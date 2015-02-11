@@ -72,7 +72,7 @@
 	(is-bleeding-at Homer 37)
 	(got-ebola Lenny)
 	(has-diarrhea-at Moe 31)
-	
+	(has-ebola Moe)
 )
 
 
