@@ -12,7 +12,7 @@
 ;;;******************************************
 ;;;* TEMPLATES POUR LES FAITS DE DÉDUCTION *
 ;;;******************************************
-
+(deffacts faits
 (is-at home lenny 5)
 (is-at home carl  5)
 
@@ -58,8 +58,8 @@
 (is-at bar moe 28)
 (is-at bar homer 28)
 
-;(is-at school lenny 28)
-;(is-at school carl 28)
+(is-at school lenny 28)
+(is-at school carl 28)
 
 (has-headache lisa 10)
 (not-infected-at homer 10)
@@ -67,9 +67,11 @@
 
 (was-contagious-at homer 28)
 (got-ebola lenny)
-;(got-ebola bart)
+(got-ebola bart)
+(was-contagious-at lenny 20)
 (not-infected-at bart 3)
+)
 
-(batch ../../LOG635/Lab01/rules.clp)
+(batch ..//..//..//Lab01//rules.clp)
 (reset)
 (run)
