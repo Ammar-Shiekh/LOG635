@@ -392,6 +392,7 @@
 	(not (transmission ?transmitor ?infected ?transmissionTime))
 
 	=>
+	
 	(assert (transmission ?transmitor ?infected ?transmissionTime))
 
 	(printout t "(transmissionViaStartedBeingContagious) ")
@@ -423,7 +424,7 @@
 
 	(has-ebola ?p1)
 	(not (got-ebola ?p1))
-
+	(not (was-contagious-at ?p1 ?t3))
 	=>
 	(assert (is-patient-zero ?p1))
 

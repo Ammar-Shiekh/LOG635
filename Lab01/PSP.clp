@@ -12,61 +12,71 @@
 ;;;******************************************
 ;;;* TEMPLATES POUR LES FAITS DE DÉDUCTION *
 ;;;******************************************
-: Personnage Price, Gallagher, Markov, Subban, Galchenyuk, Desharnais, Pacioretty
-
+; Personnage : Lisa, Homer, Bart, Marge, Maggie, Moe, Lenny, Carl, Ralph
+; Lieux : Home, School, Central, Bar, Hospital
 (clear)
 
 (deffacts faits
-	(is-at Entrainement Price 6)
-	(is-at Entrainement Markov 6)
-	(is-at Entrainement Galchenyuk 6)
+	(is-at Home Lisa 2)
+	(is-at Home Bart 2)
+	(is-at Home Maggie 2)
 
-	(is-at Entrainement Gallagher 7)
-	(is-at Entrainement Pacioretty 7)
+	(is-at Home Homer 4)
+	(is-at Home Lenny 4)
 
-	; Desharnais (Patient Zero) contamine Price
-	(is-at Gym Desharnais 9)
-	(is-at Gym Price 9)
+	; Moe (Patient Zero) contamine Lisa
+	(is-at School Moe 5)
+	(is-at School Lisa 5)
 
-	;Price contamine subban
-	(is-at MaisonCarey Price 17)
-	(is-at MaisonCarey Subban 17)
+	;Lisa contamine Marge
+	(is-at Central Lisa 14)
+	(is-at Central Marge 14)
+	
+	
+	; Marge contamine pas Homer
+	(is-at Bar Marge 22)
+	(is-at Bar Homer 22)
 
-	; Subban contamine pas gallagher
-	(is-at Cinema Subban 22)
-	(is-at Cinema Gallagher 22)
+	;Marge contamine Homer et Lenny
+	(is-at Hospital Homer 25)
+	(is-at Hospital Lenny 25)
+	(is-at Hospital Marge 25)
 
-	;subban contamine gallagher et pacioretty
-	(is-at Metro Gallagher 25)
-	(is-at Metro Pacioretty 25)
-	(is-at Metro Subban 25)
+	; Homer contamine pas galcheyuk
+	(is-at Home Homer 26)
+	(is-at Home Maggie 26)
 
-	; gallagher contamine pas galcheyuk
-	(is-at Entrainement Gallagher 26)
-	(is-at Entrainement Galchenyuk 26)
-
-	; gallagher contamine markov
-	(is-at Entrainement Gallagher 33)
-	(is-at Entrainement Markov 33)
-	(is-at Entrainement Pacioretty 33)
+	; Homer contamine Bart
+	(is-at Home Homer 33)
+	(is-at Home Bart 33)
+	(is-at Home Lenny 33)
 
 
-	(is-at Restaurant Galchenyuk 34)
-	(is-at Restaurant Pacioretty 34)
+	(is-at Central Maggie 34)
+	(is-at Central Lenny 34)
 
-	(not-infected-at Subban 15)
-	(not-infected-at Pacioretty 20)
-	(not-infected-at Galchenyuk 40)
+	(not-infected-at Marge 15)
+	(not-infected-at Lenny 20)
+	(not-infected-at Maggie 40)
+	(not-infected-at Bart 10)
 
-	(was-contagious-at Pacioretty 41)
-	(has-ebola Markov)
-	;(got-ebola Price)
-	(has-headache-at Markov 43)
-	(got-ebola Gallagher 43)
+	(was-contagious-at Lenny 33)
+	(was-contagious-at Bart 41)
+	(has-ebola Bart)
+	(has-headache-at Bart 43)
+	(got-ebola Homer)
+	(has-headache-at Marge 27)
+	(is-vomiting-at Marge 29)
+	(has-diarrhea-at Marge 31)
+	(is-vomiting-at Homer 37)
+	(is-bleeding-at Homer 37)
+	(got-ebola Lenny)
+	(has-diarrhea-at Moe 31)
+	
 )
 
 
 
-(batch ../../LOG635/Lab01/rules.clp)
+(batch ../../../Lab01/rules.clp)
 (reset)
 (run)
