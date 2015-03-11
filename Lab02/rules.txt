@@ -1,0 +1,4 @@
+(wasContagiousAt maggie 10)
+(isAt maison bart 10)
+(isAt maison homer 10)
+(isAt maison homer 9)
