@@ -1,17 +1,9 @@
-Marge a transmis l’Ébola à Homer,
 Maggie était contagieuse à 10 heures.
-Lisa n’était pas à l'hopital infecté à 8 heures.
-Carl a un mal de tête à 20 heures.
-Bart a des vomissements à 15 heures.
-Ralph a la diarrhée à 18 heures,
-Homer a des saignements à 21 heures.
-Moe est mort.
-Lisa était à l’école à 20h.
-Homer était à la centrale à 10h.
-Lenny était à la maison à 10h.
-Marge était à l’hôpital.
-Lisa était au bar.
-Bart a rencontré Lenny au bar à 15 heures.
-Carl est le patient zéro.
 Ralph est devenu contagieux à 12 heures.
-Homer a reçu l’Ébola.
+Bart est à la maison à 10 heures.
+Homer est à son domicile à 10 heures.
+Homer est à la maison à neuf heures.
+Lisa n'était pas contagieuse à 5 heures et elle a infecté Maggie à 14 heures.
+Marge est à la centrale à 3 heure. Elle était à l'école à 5 heures.
+La personne qui n'est pas infecté à 4 heures est Homer.
+Bart n'est pas contagieux à 1 heure.
