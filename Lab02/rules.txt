@@ -4,7 +4,6 @@
 (isAt maison homer 9)
 (notInfectedAt lisa 5)
 (wasContagiousAt lisa 14)
-(isAt centrale marge 3)
-(isAt ecole marge 5)
+(isAt ecole lisa 5)
 (notInfectedAt homer 4)
 (notInfectedAt bart 1)
