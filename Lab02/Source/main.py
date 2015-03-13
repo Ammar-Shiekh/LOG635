@@ -21,7 +21,7 @@ texte = unicodedata.normalize("NFKD", texte)
 
 #Parcour le tableau de remplacement et effectue les remplacements
 for i in inputRemplacement:
-   texte = texte.replace(i[0],i[1])
+   texte = texte.replace(i[0], i[1])
 
 texte = texte.encode("ascii", "ignore")
 
@@ -29,7 +29,7 @@ texte = texte.encode("ascii", "ignore")
 texte = texte.decode("utf-8")
 
 with open ("../grammaire/grammaire.cfg", "r") as myfile:
-    grammaireText=myfile.read()
+    grammaireText = myfile.read()
 
 
 #Instanciation des outils de NLTK
@@ -43,32 +43,39 @@ parser = parse.FeatureEarleyChartParser(grammar)
 name = ""
 #Pour chaque phrase, nous instancions un arbre
 for phrase in phrases:
-    #tokens = "lisa a mal a la tete a 3 heures".split()
-    tokens = phrase.split()
-    trees = parser.parse(tokens)
 
-    #On génère un arbre global
-    for tree in trees:
+    try:
 
-        #nltk.draw.tree.draw_trees(tree)
-        rule = str(tree.label()['SEM'])
+        tokens = phrase.split()
+        trees = parser.parse(tokens)
+        #On génère un arbre global
+        for tree in trees:
 
-        #Si le nom propre est 'ASD', on le remplace par le nom propre de la phrase précédente
-        if( str(tree.label()['SUJ']) == "ASD"):
-            rule = rule.replace(str(tree.label()['SUJ']), str(name))
-        else:
-            name = str(tree.label()['SUJ'])
+            # nltk.draw.tree.draw_trees(tree)
+            rule = str(tree.label()['SEM'])
 
-        #On écrit la règle Jess
-        remplacements = [['(', ' '], [')', ')\n('], [',', ' ']]
-        for remplacement in remplacements:
-            rule = rule.replace(remplacement[0], remplacement[1])
+            #Si le nom propre est 'ASD', on le remplace par le nom propre de la phrase précédente
+            if( str(tree.label()['SUJ']) == "ASD"):
+                rule = rule.replace(str(tree.label()['SUJ']), str(name))
+            else:
+                name = str(tree.label()['SUJ'])
 
-        rule = '(' + rule[:-1]
+            #On écrit la règle Jess
+            remplacements = [['(', ' '], [')', ')\n('], [',', ' ']]
+            for remplacement in remplacements:
+                rule = rule.replace(remplacement[0], remplacement[1])
 
-        #Écrit la règle dans le fichier rules.txt
-        line = rule
-        fileWriter.write(line)
+            rule = '(' + rule[:-1]
+
+            #Écrit la règle dans le fichier rules.txt
+            line = rule
+            fileWriter.write(line)
+
+    except ValueError as err:
+        print("unable to parse : ", phrase)
+        print("Problem : ", err.args[0], "\n")
+        fileWriter.close()
+
 
 print("Done")
 fileWriter.close()

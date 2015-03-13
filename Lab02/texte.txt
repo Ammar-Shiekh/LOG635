@@ -2,7 +2,7 @@ Maggie était contagieuse à 10 heures.
 Bart est à la maison à 10 heures.
 Homer est à son domicile à 10 heures.
 Homer est à la maison à neuf heures.
-Lisa n'était pas contagieuse à 5 heures et elle a infecté Maggie à 14 heures.
+Lisa n'était pas infectée à 5 heures et elle etait contagieuse à 14 heures.
 Marge est à la centrale à 3 heure. Elle était à l'école à 5 heures.
 La personne qui n'est pas infecté à 4 heures est Homer.
-Bart n'est pas contagieux à 1 heure.
+Bart n'est pas infecté à 1 heure.
