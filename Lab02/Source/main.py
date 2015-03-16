@@ -7,7 +7,7 @@ fileReader = open("../texte.txt", "r")
 fileWriter = open("../rules.txt", "w")
 
 #Array d'opération à changer
-inputRemplacement=[["et ",". "],[",",". "],["’","'"],["'a"," a"],["'à"," à"],["'e"," e"],["'é"," é"],["'i"," i"],["'o"," o"],["'h"," h"],["'y"," y"],["'u"," u"],["\n", " "],["-", ""],["!", "."],["?", "."],["(", ""],[")", ""],[";", ". "]]
+inputRemplacement=[["M.","m"],["et ",". "],[",",". "],["’","'"],["'a"," a"],["'à"," à"],["'e"," e"],["'é"," é"],["'i"," i"],["'o"," o"],["'h"," h"],["'y"," y"],["'u"," u"],["\n", " "],["-", ""],["!", "."],["?", "."],["(", ""],[")", ""],[";", ". "]]
 #voir http://la-conjugaison.nouvelobs.com/regles/grammaire/les-determinants-possessifs-79.php
 
 #Print le contenu du fichier
@@ -43,14 +43,12 @@ parser = parse.FeatureEarleyChartParser(grammar)
 name = ""
 #Pour chaque phrase, nous instancions un arbre
 for phrase in phrases:
-
     try:
 
         tokens = phrase.split()
         trees = parser.parse(tokens)
         #On génère un arbre global
         for tree in trees:
-
             # nltk.draw.tree.draw_trees(tree)
             rule = str(tree.label()['SEM'])
 
