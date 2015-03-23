@@ -1,1 +1,7 @@
 c:\users\pascal\documents\visual studio 2012\Projects\NeuronNetwork\NeuronNetwork\bin\Debug\NeuronNetwork.exe.config
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\bin\Debug\NeuronNetwork.exe.config
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\obj\Debug\NeuronNetwork.csprojResolveAssemblyReference.cache
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\bin\Debug\NeuronNetwork.exe
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\bin\Debug\NeuronNetwork.pdb
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\obj\Debug\NeuronNetwork.exe
+C:\Users\owner\Desktop\log635\Lab03\NeuronNetwork\NeuronNetwork\obj\Debug\NeuronNetwork.pdb

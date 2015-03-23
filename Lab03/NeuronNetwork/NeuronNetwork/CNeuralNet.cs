@@ -27,7 +27,7 @@ namespace NeuronNetwork
 
                 for (int i = 0; i < this.m_NumHiddenLayers - 1; i++)
                 {
-                    this.m_vecLayers.Add(new SNeuronLayer(this.m_NeuronsPerHiddenLyr,this.m_NeuronsPerHiddenLyr);
+                    //this.m_vecLayers.Add(new SNeuronLayer(this.m_NeuronsPerHiddenLyr,this.m_NeuronsPerHiddenLyr);
                 }
 
                 //Couche de sortie
@@ -111,7 +111,7 @@ namespace NeuronNetwork
         public List<double> Update(List<double> inputs)
         {
             //On enregistre la sortie de chaque couche
-            List<double> outputs;
+            List<double> outputs = null;
 
             int cWeight = 0;
 
@@ -150,10 +150,10 @@ namespace NeuronNetwork
                     }
 
                     //add in the bias
-                    netinput += this.m_vecLayers[i].m_vecNeurons[j].m_vectWeight[NumInputs - 1] * CParams::dBias;
+                    //netinput += this.m_vecLayers[i].m_vecNeurons[j].m_vectWeight[NumInputs - 1] * CParams::dBias;
 
                     //On enregistre la sortie de toutes les couches
-                    outputs.Add(Sigmoid(netinput, CParams::dActivationResponse));
+                    //outputs.Add(Sigmoid(netinput, CParams::dActivationResponse));
 
                     cWeight = 0;
                 }
