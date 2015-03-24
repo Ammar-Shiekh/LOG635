@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace NeuronNetwork.Brain
 {
     class NeuralNet
     {
-
         private int nbNeuronsPerLayer;
         private int nbHiddenLayers;
 
         private NeuronLayer inputLayer;
         private NeuronLayer[] hiddenLayers;
 
-        private float outputError;
+        private double outputError;
 
         public NeuralNet(int nbNeuronsPerLayer, int nbHiddenLayers)
         {
@@ -40,6 +37,9 @@ namespace NeuronNetwork.Brain
             // Hidden layers stuff
             this.hiddenLayers = new NeuronLayer[nbHiddenLayers];
 
+            DateTime d = DateTime.Now;
+            Thread[] threads = new Thread[nbHiddenLayers];
+
             for (int i = 0; i < nbHiddenLayers; i++)
             {
                 Random hiddenWeightsRandomizer = new Random();
@@ -55,6 +55,78 @@ namespace NeuronNetwork.Brain
 
                 this.hiddenLayers[i] = new NeuronLayer(nbNeuronsPerLayer, hiddenWeights);
             }
+        }
+
+        private NeuralNet() { } // private constructor for cloning
+
+        public static NeuralNet getGeneticClone(NeuralNet original, int geneticFrequency)
+        {
+            NeuralNet clone = new NeuralNet();
+
+            clone.nbNeuronsPerLayer = original.nbNeuronsPerLayer;
+            clone.nbHiddenLayers = original.nbHiddenLayers;
+
+            Random geneticRandomizer = new Random();
+
+            // Input layer stuff
+            double[][] inputWeights = new double[original.nbNeuronsPerLayer][];
+            Random inputWeightRandomizer = new Random();
+
+            int nbMutations = 0;
+            int nbNoMutation = 0;
+
+            for (int i = 0; i < original.nbNeuronsPerLayer; i++)
+            {
+                inputWeights[i] = new double[Program.NB_COLS + 1]; // +1 for the bias
+                
+                for (int j = 0; j < Program.NB_COLS + 1; j++)
+                {
+                    if (geneticRandomizer.Next(0, geneticFrequency) % geneticFrequency == 0) // Mutation
+                    {
+                        inputWeights[i][j] = inputWeightRandomizer.NextDouble() * inputWeightRandomizer.Next(-1, 2);
+                    }
+                    else // no mutation
+                    {
+                        inputWeights[i][j] = original.inputLayer.InputWeights[i][j];
+                    }
+                }
+            }
+
+            clone.inputLayer = new NeuronLayer(original.nbNeuronsPerLayer, inputWeights);
+
+            // Hidden layers stuff
+            clone.hiddenLayers = new NeuronLayer[original.nbHiddenLayers];
+
+            for (int i = 0; i < original.nbHiddenLayers; i++)
+            {
+                Random hiddenWeightsRandomizer = new Random();
+                double[][] hiddenWeights = new double[original.nbNeuronsPerLayer][];
+                for (int j = 0; j < original.nbNeuronsPerLayer; j++)
+                {
+                    hiddenWeights[j] = new double[original.nbNeuronsPerLayer + 1]; // +1 for the bias
+
+                    for (int k = 0; k < original.nbNeuronsPerLayer + 1; k++)
+                    {
+
+                        if (geneticRandomizer.Next(0, geneticFrequency) % geneticFrequency == 0) // Mutation
+                        {
+                            hiddenWeights[j][k] = hiddenWeightsRandomizer.NextDouble() * hiddenWeightsRandomizer.Next(-1, 2);
+                            nbMutations++;
+                        }
+                        else // no mutation
+                        {
+                            hiddenWeights[j][k] = original.hiddenLayers[i].InputWeights[j][k];
+                            nbNoMutation++;
+                        }
+                    }
+                }
+
+                clone.hiddenLayers[i] = new NeuronLayer(original.nbNeuronsPerLayer, hiddenWeights);
+            }
+
+            Console.WriteLine("Weights | Modified : " + nbMutations + " | Copied : " + nbNoMutation); 
+
+            return clone;
         }
 
         /**
@@ -73,21 +145,41 @@ namespace NeuronNetwork.Brain
                     this.hiddenLayers[j].process(this.hiddenLayers[j - 1].Output);
                 }
 
-                int[] vals = new int[8];
-                foreach (double _output in this.inputLayer.Output)
-                {
-                    vals[(int) Math.Round(_output * 7, 0)]++;
-                }
+                this.outputError += getErrorMode(_player.rank);
+            }
 
-                int prediction = 0;
+            this.outputError /= players.Count;
+        }
 
-                for (int j = 0; j < 8; j++)
-                {
-                    if (vals[j] > vals[prediction]) prediction = j;
-                }
+        private double getErrorMode(int rank)
+        {
+            int[] vals = new int[8];
+            foreach (double _output in this.hiddenLayers[nbHiddenLayers - 1].Output)
+            {
+                vals[(int)Math.Round(_output * 7, 0)]++;
+            }
 
-                Console.WriteLine();
+            int prediction = 0;
 
+            for (int j = 0; j < 8; j++)
+            {
+                if (vals[j] > vals[prediction]) prediction = j;
+            }
+
+            prediction += 1;
+
+            return rank == prediction? 0 : 1;
+        }
+
+        public double OutputError
+        {
+            get
+            {
+                return this.outputError;
+            }
+            set
+            {
+                this.outputError = value;
             }
         }
     }

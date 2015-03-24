@@ -28,7 +28,7 @@ namespace NeuronNetwork.Brain
                     output[i] += input[j] * this.inputWeights[i][j];
                 }
 
-                output[i] += this.inputWeights[i][this.inputWeights[i].Length -1] * -1;
+                output[i] += this.inputWeights[i][this.inputWeights[i].Length -1] *  nbNeurons;
                 output[i] = Util.Sigmoid.sigmoid(output[i]);
             }
         }

@@ -56,18 +56,40 @@ namespace NeuronNetwork
 
             // do
 
-            int nbNeurons = 1500;
-            int nbHiddenLayers = 5;
-            Brain.NeuralNet n1 = new Brain.NeuralNet(nbNeurons, nbHiddenLayers);
+            int nbNeurons = 1000;
+            int nbHiddenLayers = 10;
+            Brain.NeuralNet previousNet = new Brain.NeuralNet(nbNeurons, nbHiddenLayers);
+            Brain.NeuralNet newNet;
 
             foreach (Model.Player _player in players)
             {
                 _player.normalize(players.Count);
             }
 
+
             // Split list here
 
-            n1.process(players);
+            previousNet.process(players);
+
+            int nbMutations = 0;
+            int nbGoodMutations = 0;
+            while (previousNet.OutputError > 0.5)
+            {
+                Console.WriteLine(previousNet.OutputError);
+
+                newNet = Brain.NeuralNet.getGeneticClone(previousNet, 3);
+                nbMutations++;
+
+                newNet.process(players);
+
+                if (previousNet.OutputError > newNet.OutputError)
+                {
+                    previousNet = newNet;
+                    nbGoodMutations++;
+                }
+            }
+
+            Console.WriteLine();
 
                 // create neuralNet
 
