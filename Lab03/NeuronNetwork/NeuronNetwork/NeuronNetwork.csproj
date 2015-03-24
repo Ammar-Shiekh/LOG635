@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Brain\NeuronLayer.cs" />
     <Compile Include="Brain\NeuralNet.cs" />
+    <Compile Include="Brain\Params.cs" />
     <Compile Include="CNeuralNet.cs" />
     <Compile Include="Brain\Neuron.cs" />
     <Compile Include="Model\Player.cs" />

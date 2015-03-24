@@ -8,7 +8,6 @@ namespace NeuronNetwork
 {
     class Program
     {
-
         public const int NB_COLS = 19;
 
         static void Main(string[] args)
@@ -56,28 +55,26 @@ namespace NeuronNetwork
 
             // do
 
-            int nbNeurons = 1000;
-            int nbHiddenLayers = 10;
-            Brain.NeuralNet previousNet = new Brain.NeuralNet(nbNeurons, nbHiddenLayers);
-            Brain.NeuralNet newNet;
-
             foreach (Model.Player _player in players)
             {
                 _player.normalize(players.Count);
             }
 
-
             // Split list here
-
-            previousNet.process(players);
 
             int nbMutations = 0;
             int nbGoodMutations = 0;
-            while (previousNet.OutputError > 0.5)
+
+            // #refactor move to brain class in learn() method.
+            Brain.NeuralNet previousNet = new Brain.NeuralNet(Brain.Params.NB_NEURON_PER_LAYER, Brain.Params.NB_HIDDEN_LAYERS);
+            Brain.NeuralNet newNet;
+            previousNet.process(players);
+
+            while (previousNet.OutputError > Brain.Params.ERROR_TRESHOLD)
             {
                 Console.WriteLine(previousNet.OutputError);
 
-                newNet = Brain.NeuralNet.getGeneticClone(previousNet, 3);
+                newNet = Brain.NeuralNet.getGeneticClone(previousNet);
                 nbMutations++;
 
                 newNet.process(players);
@@ -88,47 +85,6 @@ namespace NeuronNetwork
                     nbGoodMutations++;
                 }
             }
-
-            Console.WriteLine();
-
-                // create neuralNet
-
-                
-                // For each sample line
-
-                    // Set inputs of input layer
-
-                    // Execute input layer
-
-                    // Set input of first hidden layer
-
-                    // For each hidden layers
-
-                        // Execute hidden layer
-                
-                        // Set input of next layer with output of layer
-
-                    // End for
-
-                    // With last hidden layer, calculate rank with outputs
-
-                    // Calculate error and sum it up
-
-                // End for
-
-                // Calculate average error with sum
-
-                // If error is smaller than previous settings
-                    
-                    // apply genetic to this
-
-                // else
-                    
-                    // Apply genetic to previous
-                
-                // end if
-
-            // while average error is higher than Z
 
             Console.ReadLine();
         }

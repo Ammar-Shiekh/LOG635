@@ -14,117 +14,47 @@ namespace NeuronNetwork.Brain
 
         private double outputError;
 
+        /**
+         * Build's the neural net with one input layer and nbHiddenLayers hidden layers
+         **/
         public NeuralNet(int nbNeuronsPerLayer, int nbHiddenLayers)
         {
             this.nbNeuronsPerLayer = nbNeuronsPerLayer;
             this.nbHiddenLayers = nbHiddenLayers;
 
-            // Input stuff
-            double[][] inputWeights = new double[nbNeuronsPerLayer][];
-            Random inputWeightRandomizer = new Random();
+            // Build input layer
+            this.inputLayer = NeuronLayer.buildNewLayer(nbNeuronsPerLayer, Program.NB_COLS);
 
-            for (int i = 0; i < nbNeuronsPerLayer; i++)
-            {
-                inputWeights[i] = new double[Program.NB_COLS + 1]; // +1 for the bias
-                for (int j = 0; j < Program.NB_COLS + 1; j++)
-                {
-                    inputWeights[i][j] = inputWeightRandomizer.NextDouble() * inputWeightRandomizer.Next(-1, 2);
-                }
-            }
-
-            this.inputLayer = new NeuronLayer(nbNeuronsPerLayer, inputWeights);
-
-            // Hidden layers stuff
+            // Build hidden layers
             this.hiddenLayers = new NeuronLayer[nbHiddenLayers];
-
-            DateTime d = DateTime.Now;
-            Thread[] threads = new Thread[nbHiddenLayers];
 
             for (int i = 0; i < nbHiddenLayers; i++)
             {
-                Random hiddenWeightsRandomizer = new Random();
-                double[][] hiddenWeights = new double[nbNeuronsPerLayer][];
-                for (int j = 0; j < nbNeuronsPerLayer; j++)
-                {
-                    hiddenWeights[j] = new double[nbNeuronsPerLayer + 1]; // +1 for the bias
-                    for (int k = 0; k < nbNeuronsPerLayer + 1; k++)
-                    {
-                        hiddenWeights[j][k] = hiddenWeightsRandomizer.NextDouble() * hiddenWeightsRandomizer.Next(-1, 2);
-                    }
-                }
-
-                this.hiddenLayers[i] = new NeuronLayer(nbNeuronsPerLayer, hiddenWeights);
+                this.hiddenLayers[i] = NeuronLayer.buildNewLayer(nbNeuronsPerLayer, nbNeuronsPerLayer);
             }
         }
 
         private NeuralNet() { } // private constructor for cloning
 
-        public static NeuralNet getGeneticClone(NeuralNet original, int geneticFrequency)
+        /**
+         *  Copy's the neural net and returns a new one with genetic mutations
+         **/
+        public static NeuralNet getGeneticClone(NeuralNet original)
         {
             NeuralNet clone = new NeuralNet();
 
             clone.nbNeuronsPerLayer = original.nbNeuronsPerLayer;
             clone.nbHiddenLayers = original.nbHiddenLayers;
 
-            Random geneticRandomizer = new Random();
+            clone.inputLayer = NeuronLayer.copyLayer(original.nbNeuronsPerLayer, Program.NB_COLS, original.inputLayer);
 
-            // Input layer stuff
-            double[][] inputWeights = new double[original.nbNeuronsPerLayer][];
-            Random inputWeightRandomizer = new Random();
 
-            int nbMutations = 0;
-            int nbNoMutation = 0;
-
-            for (int i = 0; i < original.nbNeuronsPerLayer; i++)
-            {
-                inputWeights[i] = new double[Program.NB_COLS + 1]; // +1 for the bias
-                
-                for (int j = 0; j < Program.NB_COLS + 1; j++)
-                {
-                    if (geneticRandomizer.Next(0, geneticFrequency) % geneticFrequency == 0) // Mutation
-                    {
-                        inputWeights[i][j] = inputWeightRandomizer.NextDouble() * inputWeightRandomizer.Next(-1, 2);
-                    }
-                    else // no mutation
-                    {
-                        inputWeights[i][j] = original.inputLayer.InputWeights[i][j];
-                    }
-                }
-            }
-
-            clone.inputLayer = new NeuronLayer(original.nbNeuronsPerLayer, inputWeights);
-
-            // Hidden layers stuff
             clone.hiddenLayers = new NeuronLayer[original.nbHiddenLayers];
 
             for (int i = 0; i < original.nbHiddenLayers; i++)
             {
-                Random hiddenWeightsRandomizer = new Random();
-                double[][] hiddenWeights = new double[original.nbNeuronsPerLayer][];
-                for (int j = 0; j < original.nbNeuronsPerLayer; j++)
-                {
-                    hiddenWeights[j] = new double[original.nbNeuronsPerLayer + 1]; // +1 for the bias
-
-                    for (int k = 0; k < original.nbNeuronsPerLayer + 1; k++)
-                    {
-
-                        if (geneticRandomizer.Next(0, geneticFrequency) % geneticFrequency == 0) // Mutation
-                        {
-                            hiddenWeights[j][k] = hiddenWeightsRandomizer.NextDouble() * hiddenWeightsRandomizer.Next(-1, 2);
-                            nbMutations++;
-                        }
-                        else // no mutation
-                        {
-                            hiddenWeights[j][k] = original.hiddenLayers[i].InputWeights[j][k];
-                            nbNoMutation++;
-                        }
-                    }
-                }
-
-                clone.hiddenLayers[i] = new NeuronLayer(original.nbNeuronsPerLayer, hiddenWeights);
+                clone.hiddenLayers[i] = NeuronLayer.copyLayer(original.nbNeuronsPerLayer, original.nbNeuronsPerLayer, original.hiddenLayers[i]);
             }
-
-            Console.WriteLine("Weights | Modified : " + nbMutations + " | Copied : " + nbNoMutation); 
 
             return clone;
         }
@@ -145,30 +75,32 @@ namespace NeuronNetwork.Brain
                     this.hiddenLayers[j].process(this.hiddenLayers[j - 1].Output);
                 }
 
-                this.outputError += getErrorMode(_player.rank);
+                int prediction = getPrediction();
+
+                this.outputError += _player.rank == prediction ? 0 : 1;
             }
 
             this.outputError /= players.Count;
         }
 
-        private double getErrorMode(int rank)
+        /**
+         * Calculates the prediction with the output of the last layer by doing the statistical mode of the layer's neurons outputs.
+         **/
+        private int getPrediction()
         {
-            int[] vals = new int[8];
+            int[] vals = new int[Model.Player.NB_RANKS];
             foreach (double _output in this.hiddenLayers[nbHiddenLayers - 1].Output)
             {
-                vals[(int)Math.Round(_output * 7, 0)]++;
+                vals[(int)Math.Round(_output * (Model.Player.NB_RANKS - 1) / Params.OUTPUT_MULTIPLIER, 0)]++;
             }
 
             int prediction = 0;
-
-            for (int j = 0; j < 8; j++)
+            for (int j = 0; j < Model.Player.NB_RANKS; j++)
             {
                 if (vals[j] > vals[prediction]) prediction = j;
             }
 
-            prediction += 1;
-
-            return rank == prediction? 0 : 1;
+            return prediction + 1;
         }
 
         public double OutputError

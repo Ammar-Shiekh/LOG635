@@ -4,7 +4,7 @@ namespace NeuronNetwork.Model
 {
     class Player
     {
-        public const int RANK = 1;
+        public const int NB_RANKS = 8;
 
         public int rank;
 
