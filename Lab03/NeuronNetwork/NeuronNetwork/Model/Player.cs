@@ -56,7 +56,7 @@ namespace NeuronNetwork.Model
                     myValues[i] = SUM_VALUES[i] / nbPlayers;    // If unknown value, set to average
                 }
 
-                myValues[i] = (myValues[i] - MIN_VALUES[i]) / (MAX_VALUES[i] - MIN_VALUES[i]);
+                myValues[i] = (myValues[i] - MIN_VALUES[i]) / (MAX_VALUES[i] - MIN_VALUES[i]) * Brain.Params.OUTPUT_MULTIPLIER;
             }
         }
     }

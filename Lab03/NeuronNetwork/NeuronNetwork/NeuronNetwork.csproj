@@ -45,9 +45,9 @@
     <Compile Include="Brain\NeuralNet.cs" />
     <Compile Include="Brain\Params.cs" />
     <Compile Include="CNeuralNet.cs" />
-    <Compile Include="Brain\Neuron.cs" />
     <Compile Include="Model\Player.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Program\Params.cs" />
+    <Compile Include="Program\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SNeuron.cs" />
     <Compile Include="SNeuronLayer.cs" />
