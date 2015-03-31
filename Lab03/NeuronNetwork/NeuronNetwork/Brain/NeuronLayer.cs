@@ -4,6 +4,8 @@ namespace NeuronNetwork.Brain
 {
     class NeuronLayer
     {
+        private static int someInt = 1;
+
         private double[] output;
 
         private double[][] inputWeights;
@@ -21,7 +23,7 @@ namespace NeuronNetwork.Brain
         public static NeuronLayer buildNewLayer(int nbNeurons, int nbInput)
         {
             double[][] weights = new double[nbNeurons][];
-            Random weightRandomizer = new Random();
+            Random weightRandomizer = new Random((++someInt + Environment.TickCount) * 2);
 
             for (int i = 0; i < nbNeurons; i++)
             {
@@ -38,10 +40,9 @@ namespace NeuronNetwork.Brain
         // Factory method
         public static NeuronLayer copyLayer(int nbNeurons, int nbInputs, NeuronLayer original)
         {
-            Random geneticRandomizer = new Random();
-
             double[][] weights = new double[nbNeurons][];
-            Random weightRandomizer = new Random();
+            Random geneticRandomizer = new Random((++someInt + Environment.TickCount) * 2);
+            Random weightRandomizer = new Random((++someInt + Environment.TickCount) * 2);
 
             for (int i = 0; i < nbNeurons; i++)
             {
@@ -66,7 +67,6 @@ namespace NeuronNetwork.Brain
         // Calculates the output of each neurons
         public void process(double[] input)
         {
-
             for (int i = 0; i < nbNeurons; i++)
             {
                 output[i] = 0;

@@ -156,11 +156,13 @@ namespace NeuronNetwork.Brain
         /**
          * Function through which the neural net is going to calculate it's error.
          **/
-        public void process(List<Model.Player> players)
+        public void computeError(List<Model.Player> players)
         {
+            this.outputError = 0;
+
             foreach (Model.Player _player in players)
             {
-                int prediction = processPlayer(_player);
+                int prediction = predictRank(_player);
                 
                 this.outputError += _player.rank == prediction ? 0 : 1;
             }
@@ -168,7 +170,7 @@ namespace NeuronNetwork.Brain
             this.outputError /= players.Count;
         }
 
-        public int processPlayer(Model.Player player)
+        public int predictRank(Model.Player player)
         {
             inputLayer.process(player.myValues);
 
@@ -181,7 +183,7 @@ namespace NeuronNetwork.Brain
 
             this.outputLayer.process(this.hiddenLayers[this.nbHiddenLayers - 1].Output);
 
-            return (int) Math.Round(this.outputLayer.Output[0] * (Model.Player.NB_RANKS) / Params.OUTPUT_MULTIPLIER, 0);
+            return (int) Math.Round(this.outputLayer.Output[0] * (Model.Player.NB_RANKS - 1) / Params.OUTPUT_MULTIPLIER) + 1;
         }
 
         /**
