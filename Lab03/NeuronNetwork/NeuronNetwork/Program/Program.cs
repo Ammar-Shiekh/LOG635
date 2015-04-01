@@ -12,6 +12,7 @@ namespace NeuronNetwork.Program
         {
 
             List<Model.Player> players = new List<Model.Player>();
+            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.CreateSpecificCulture("en-US");
 
             // Read file and fill players list
             String line;
@@ -219,23 +220,33 @@ namespace NeuronNetwork.Program
 
             Console.SetCursorPosition(0, 9);
             bestNet.computeError(listForTesting);
-            Console.WriteLine("Testing with " + listForTesting.Count + " players (Error : " + bestNet.OutputErrorAbs.ToString("P" + nbDecimals) + ") :" + Environment.NewLine);
+            Console.WriteLine("Testing with " + listForTesting.Count + " players (Error : " + bestNet.OutputErrorAbs.ToString("P" + nbDecimals) + ") : | " + bestNet.OutputErrorRel.ToString("P" + nbDecimals) + Environment.NewLine);
+            int[] total = new int[8];
             foreach (Model.Player _player  in listForTesting)
             {
+                total[_player.rank -1]++;
                 //Console.WriteLine(_player.rank + " -> " + bestNet.processPlayer(_player));
                 dispersion[_player.rank - 1, bestNet.predictRank(_player) - 1]++;
             }
 
-            Console.WriteLine("Input ->   1    2    3    4    5    6    7    8");
-            Console.WriteLine("_________________________________________________");
+            Console.WriteLine("Input    ->    1     2     3     4     5     6     7     8");
+            Console.WriteLine("___________________________________________________________");
 
             for (int i = 0; i < 8; i++)
             {
-                Console.Write("  " + (i + 1));
-                Console.Write("  ->  [");
+                Console.Write( (i + 1) + " ("+String.Format("{0,2:#0}", ((double)total[i] / 1017) * 100) + "%)");
+                Console.Write("  -> [");
                 for (int j = 0; j < 8; j++)
                 {
-                    Console.Write(String.Format("{0,3:##0}", dispersion[i, j]) + (j == 7? "" : ", "));
+                    //Console.Write(dispersion[i, j]);
+                    //Console.Write("/");
+                    //Console.Write(total[i]);
+                    double pour = (double)dispersion[i, j] / (double)total[i]*100;
+                    //double pour = (double)dispersion[i, j] / 1017*100;
+                    //Console.Write("=");
+                   // Console.Write(pour);
+                    //Console.Write(";");
+                    Console.Write(String.Format("{0,3:##0}", pour) + "%" +(j == 7 ? "" : ", "));
                 }
                 Console.WriteLine("]");
             }
