@@ -8,7 +8,6 @@ fileWriter = open("../rules.txt", "w")
 
 #Array d'opération à changer
 inputRemplacement=[["M.","m"],["et ",". "],[",",". "],["’","'"],["'a"," a"],["'à"," à"],["'e"," e"],["'é"," é"],["'i"," i"],["'o"," o"],["'h"," h"],["'y"," y"],["'u"," u"],["\n", " "],["-", ""],["!", "."],["?", "."],["(", ""],[")", ""],[";", ". "]]
-#voir http://la-conjugaison.nouvelobs.com/regles/grammaire/les-determinants-possessifs-79.php
 
 #Print le contenu du fichier
 texte = fileReader.read()
@@ -68,6 +67,8 @@ for phrase in phrases:
             #Écrit la règle dans le fichier rules.txt
             line = rule
             fileWriter.write(line)
+
+            print(phrase + ' -> ' + rule)
 
     except ValueError as err:
         print("unable to parse : ", phrase)

@@ -23,17 +23,18 @@ namespace NeuronNetwork.Program
             while ((line = file.ReadLine()) != null)
             {
                 splitLine = line.Split(comma);
+
                 players.Add(new Model.Player(new double[] {
                                             // double.Parse(splitLine[0]), // player id
                                             //double.Parse(splitLine[1]) // league index
-                                            splitLine[2].Equals("\"?\"") ? -1 : double.Parse(splitLine[2]), // age
+                                            //splitLine[2].Equals("\"?\"") ? -1 : double.Parse(splitLine[2]), // age
                                             splitLine[3].Equals("\"?\"") ? -1 : double.Parse(splitLine[3]), // hours per week
                                             splitLine[4].Equals("\"?\"") ? -1 : double.Parse(splitLine[4]), // total hours
                                             double.Parse(splitLine[5]), // APM
                                             double.Parse(splitLine[6].Trim(doubleQuotes), System.Globalization.NumberStyles.Float), // SelectByHotkeys
                                             double.Parse(splitLine[7].Trim(doubleQuotes), System.Globalization.NumberStyles.Float), // AssignToHotkeys
                                             double.Parse(splitLine[8]), // UniqueHotkeys
-                                             double.Parse(splitLine[9].Trim(doubleQuotes), System.Globalization.NumberStyles.Float), // MinimapAttacks
+                                            double.Parse(splitLine[9].Trim(doubleQuotes), System.Globalization.NumberStyles.Float), // MinimapAttacks
                                             double.Parse(splitLine[10].Trim(doubleQuotes), System.Globalization.NumberStyles.Float),
                                             double.Parse(splitLine[11]),
                                             double.Parse(splitLine[12]),
@@ -130,7 +131,7 @@ namespace NeuronNetwork.Program
                         newNet.computeError(listForLearning);
 
                         // Keep clone?
-                        if (previousNet.OutputError > newNet.OutputError)
+                        if (previousNet.OutputErrorAbs > newNet.OutputErrorAbs)
                         {
                             previousNet = newNet;
 
@@ -140,16 +141,20 @@ namespace NeuronNetwork.Program
                             consoleAccess.WaitOne();
                             // Display new error %
                             Console.SetCursorPosition(cursorPosition, 2);
-                            Console.Write(previousNet.OutputError.ToString("P" + nbDecimals));
+                            Console.Write(previousNet.OutputErrorAbs.ToString("P" + nbDecimals));
 
                             // Set best net if this one is better
-                            if (previousNet.OutputError < bestNet.OutputError)
+                            if (previousNet.OutputErrorAbs < bestNet.OutputErrorAbs)
                             {
+                                if (bestNet.OutputErrorAbs > 100)
+                                    Console.WriteLine();
+
+                                Brain.NeuralNet pn = bestNet;
                                 bestNet = previousNet;
                                 threadWorkingOnBestNet = myThreadId;
 
                                 Console.SetCursorPosition(0, 7);
-                                Console.WriteLine("Best neural net (" + threadWorkingOnBestNet + ") with error of " + bestNet.OutputError.ToString("P" + nbDecimals) + " (press Enter to stop)");
+                                Console.Write("Best neural net (" + threadWorkingOnBestNet + ") with error of " + bestNet.OutputErrorAbs.ToString("P" + nbDecimals) + " (press Enter to stop)");
                             }                        
                             consoleAccess.Release(); // Using console semaphore for best net access because I'm lazy
                         }
@@ -173,7 +178,7 @@ namespace NeuronNetwork.Program
 
                             consoleAccess.WaitOne();
                             Console.SetCursorPosition(cursorPosition, 2);
-                            Console.Write(previousNet.OutputError.ToString("P" + nbDecimals));
+                            Console.Write(previousNet.OutputErrorAbs.ToString("P" + nbDecimals));
                             consoleAccess.Release(); // Using console semaphore for best net access because I'm lazy
                         }
                     }
@@ -183,8 +188,25 @@ namespace NeuronNetwork.Program
                 System.Threading.Thread.Sleep(i * 2); // For better randoms
                 threads[i] = t;
             }
+            
+            // Time counting thread
+            (new System.Threading.Thread(() =>{
 
-            Console.ReadLine(); // Press enter to stop
+                DateTime start = DateTime.Now;
+
+                while (!stopThreads)
+                {
+                    consoleAccess.WaitOne();
+                    Console.SetCursorPosition(0, 5);
+                    Console.Write("Elapsed time : " + DateTime.Now.Subtract(start).TotalSeconds.ToString("N0") + " s");
+                    consoleAccess.Release();
+
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+            })).Start();
+
+            Console.ReadKey(true); // Press enter to stop
             stopThreads = true;
 
             // Wait for all the threads to finish

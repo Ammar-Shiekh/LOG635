@@ -1,11 +1,11 @@
 Maggie est devenue contagieuse à 10 heures.
-Bart est à la maison à 10 heures.
+Bart est à l'école à 10 heures.
 Homer est à son domicile à 10 heures.
 Monsieur Simpson est à son travail à neuf heures.
 Le bébé a mal a la tete a 15 heures.
 Lisa n'était pas infectée à 5 heures et elle etait contagieuse à 14 heures.
 Marge est à la centrale à 3 heures.
 Elle était à l'école à 5 heures.
-La personne qui n'est pas infecté à 4 heures est Homer.
+La personne qui n'est pas infecté à 4 heure est Homer.
 Bart n'est pas infecté à 1 heure.
 Le barman est mort a dix-neuf heures.

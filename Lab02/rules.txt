@@ -1,5 +1,5 @@
 (wasContagiousAt maggie 10)
-(isAt maison bart 10)
+(isAt ecole bart 10)
 (isAt maison homer 10)
 (isAt centrale homer 9)
 (hasHeadacheAt maggie 15)
@@ -7,6 +7,5 @@
 (wasContagiousAt lisa 14)
 (isAt centrale marge 3)
 (isAt ecole marge 5)
-(notInfectedAt homer 4)
 (notInfectedAt bart 1)
 (isDeadAt moe 19)
