@@ -219,7 +219,7 @@ namespace NeuronNetwork.Program
 
             Console.SetCursorPosition(0, 9);
             bestNet.computeError(listForTesting);
-            Console.WriteLine("Testing with " + listForTesting.Count + " players (Error : " + bestNet.OutputError.ToString("P" + nbDecimals) + ") :" + Environment.NewLine);
+            Console.WriteLine("Testing with " + listForTesting.Count + " players (Error : " + bestNet.OutputErrorAbs.ToString("P" + nbDecimals) + ") :" + Environment.NewLine);
             foreach (Model.Player _player  in listForTesting)
             {
                 //Console.WriteLine(_player.rank + " -> " + bestNet.processPlayer(_player));
