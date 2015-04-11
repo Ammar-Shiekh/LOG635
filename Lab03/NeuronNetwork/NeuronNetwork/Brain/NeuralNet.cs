@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace NeuronNetwork.Brain
 {
+    /// <summary>
+    /// Neural net formed of an input neuron layer, hidden neuron layers and an output neuron layer.
+    /// </summary>
     class NeuralNet
     {
         private int nbNeuronsPerLayer;
@@ -14,8 +15,11 @@ namespace NeuronNetwork.Brain
         private NeuronLayer[] hiddenLayers;
         private NeuronLayer outputLayer;
 
-        private double outputErrorAbs;
-        private double outputErrorRel;
+        // average output error
+        private double outputErrorAbs; // calculated +1 per wrong output and +0 per right output
+        private double outputErrorRel; // calculated with distance with the right answer (e.g. if input = 3 and output = 5 then error = 2)
+
+        // Buffer to store sum of errors used for averages
         private int outputErrorSumAbs;
         private int outputErrorSumRel;
 
@@ -32,12 +36,12 @@ namespace NeuronNetwork.Brain
 
             // Build hidden layers
             this.hiddenLayers = new NeuronLayer[nbHiddenLayers];
-
             for (int i = 0; i < nbHiddenLayers; i++)
             {
                 this.hiddenLayers[i] = NeuronLayer.buildNewLayer(nbNeuronsPerLayer, nbNeuronsPerLayer);
             }
 
+            // Build output layer
             this.outputLayer = NeuronLayer.buildNewLayer(1, nbNeuronsPerLayer);
         }
 
@@ -72,39 +76,50 @@ namespace NeuronNetwork.Brain
          **/
         public void computeError(List<Model.Player> players)
         {
+            // Reset error attributes
             this.OutputErrorAbs = 0;
             this.outputErrorSumAbs = 0; 
             this.OutputErrorRel = 0;
             this.outputErrorSumRel = 0;
 
+            // Predict rank for each players and add up errors together
             foreach (Model.Player _player in players)
             {
                 int prediction = predictRank(_player);
 
                 this.outputErrorSumAbs += _player.rank == prediction ? 0 : 1;
+
                 this.outputErrorSumRel += Math.Abs(_player.rank - prediction);
             }
 
+            // Compute error averages
             this.OutputErrorAbs = (double)this.outputErrorSumAbs / (players.Count);
             this.OutputErrorRel = (double)this.outputErrorSumRel / (players.Count * 8);
-
         }
 
+        // Returns a player's rank by processing the player's other attribute through the neural net
         public int predictRank(Model.Player player)
         {
+            // Process player values through input layer
             inputLayer.process(player.myValues);
 
+            // Then feed input layer's output through first hidden layer
             this.hiddenLayers[0].process(inputLayer.Output);
 
+            // Then feed each hidden layers output into the next ones input
             for (int j = 1; j < this.nbHiddenLayers; j++)
             {
                 this.hiddenLayers[j].process(this.hiddenLayers[j - 1].Output);
             }
 
+            // Then last hidden layer's output becomes output layer's input
             this.outputLayer.process(this.hiddenLayers[this.nbHiddenLayers - 1].Output);
 
+            // Return "denormalized" prediction
             return (int) Math.Round(this.outputLayer.Output[0] * (Model.Player.NB_RANKS - 1) / Params.OUTPUT_MULTIPLIER) + 1;
         }
+
+        // Getters / Setters ...
 
         public double OutputErrorRel
         {

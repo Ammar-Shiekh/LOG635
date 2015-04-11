@@ -44,19 +44,21 @@ namespace NeuronNetwork.Model
             }
         }
 
-        /**
-         * Change normalization strategy here
-         **/
-        public void normalize(int nbPlayers)
+        /// <summary>
+        /// Normalizes the player's values
+        /// </summary>
+        public void normalize(int nbTotalPlayers)
         {
+            // Values are normalize 
             for (int i = 0; i < myValues.Length; i++)
             {
                 if (1 <= i && i <= 3 && myValues[i] == -1)
                 {
-                    myValues[i] = SUM_VALUES[i] / nbPlayers;    // If unknown value, set to average
+                    myValues[i] = SUM_VALUES[i] / nbTotalPlayers;    // If unknown value, set to average
                 }
 
-                myValues[i] = (myValues[i] - MIN_VALUES[i]) / (MAX_VALUES[i] - MIN_VALUES[i]) * Brain.Params.OUTPUT_MULTIPLIER;
+                myValues[i] = (myValues[i] - MIN_VALUES[i]) / (MAX_VALUES[i] - MIN_VALUES[i])
+                    * Brain.Params.OUTPUT_MULTIPLIER; // This is explained in the Brain.Params class and the NeuronLayer.process method.
             }
         }
     }
