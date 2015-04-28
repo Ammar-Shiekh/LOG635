@@ -7,7 +7,7 @@ namespace NeuronNetwork.Brain
     /// </summary>
     class Params
     {
-        public const int NB_NEURON_PER_LAYER = 8;   // Nb of neuron per layers (except for output layer. Output layer always has only 1 neuron)
+        public const int NB_NEURON_PER_LAYER = 6;   // Nb of neuron per layers (except for output layer. Output layer always has only 1 neuron)
 
         public const int NB_HIDDEN_LAYERS = 2;      // Nb of hidden layers per neural net
 
